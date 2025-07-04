@@ -1,69 +1,34 @@
-import java.util.*;
-
 class Solution {
-    static class Node implements Comparable<Node> {
-        int dest, cost;
-
-        public Node(int dest, int cost) {
-            this.dest = dest;
-            this.cost = cost;
-        }
-
-        public int compareTo(Node o) {
-            return this.cost - o.cost;
-        }
-    }
-
     public int solution(int n, int s, int a, int b, int[][] fares) {
-        List<List<Node>> graph = new ArrayList<>();
-        for (int i = 0; i <= n; i++) {
-            graph.add(new ArrayList<>());
+        
+        int[][]map = new int[n+1][n+1];
+        
+        for(int i = 1; i<= n; i++){
+            for(int j = 1; j<= n; j++){
+                map[i][j] = 200 * 100_000;
+            }
+            map[i][i] = 0;
+        }       
+        
+        for(int[]fare : fares){
+            map[fare[0]][fare[1]] = fare[2];
+            map[fare[1]][fare[0]] = fare[2];
         }
-
-        // 그래프 구성
-        for (int[] fare : fares) {
-            int from = fare[0];
-            int to = fare[1];
-            int cost = fare[2];
-            graph.get(from).add(new Node(to, cost));
-            graph.get(to).add(new Node(from, cost)); // 양방향
-        }
-
-        int[] distFromS = dijkstra(n, s, graph);
-        int[] distFromA = dijkstra(n, a, graph);
-        int[] distFromB = dijkstra(n, b, graph);
-
-        int minFare = Integer.MAX_VALUE;
-
-        for (int i = 1; i <= n; i++) {
-            if (distFromS[i] == Integer.MAX_VALUE || distFromA[i] == Integer.MAX_VALUE || distFromB[i] == Integer.MAX_VALUE)
-                continue;
-            minFare = Math.min(minFare, distFromS[i] + distFromA[i] + distFromB[i]);
-        }
-
-        return minFare;
-    }
-
-    private int[] dijkstra(int n, int start, List<List<Node>> graph) {
-        int[] dist = new int[n + 1];
-        Arrays.fill(dist, Integer.MAX_VALUE);
-        dist[start] = 0;
-
-        PriorityQueue<Node> pq = new PriorityQueue<>();
-        pq.add(new Node(start, 0));
-
-        while (!pq.isEmpty()) {
-            Node cur = pq.poll();
-            if (cur.cost > dist[cur.dest]) continue;
-
-            for (Node next : graph.get(cur.dest)) {
-                if (dist[next.dest] > cur.cost + next.cost) {
-                    dist[next.dest] = cur.cost + next.cost;
-                    pq.add(new Node(next.dest, dist[next.dest]));
+        
+        for(int k = 1; k<= n; k++){
+            for(int i = 1; i<=n; i++){
+                for(int j=1; j<=n; j++){
+                    if(map[i][j] > map[i][k] + map[k][j]){
+                        map[i][j] = map[i][k] + map[k][j];
+                    }
                 }
             }
         }
-
-        return dist;
+        
+        int answer = map[s][a] + map[s][b];
+        for(int i =1; i<=n; i++){
+            answer = Math.min(answer, map[s][i] + map[i][a] + map[i][b]);
+        }
+        return answer;
     }
 }
